@@ -33,6 +33,13 @@ jobs:
       - name: Export web build
         run: npx expo export --platform web --output-dir dist
 
+      - name: Prepare files for GitHub Pages project path
+        run: |
+          touch dist/.nojekyll
+          find dist -type f -name "*.html" -print0 | xargs -0 sed -i 's|src="/|src="/military/|g; s|href="/|href="/military/|g'
+          find dist -type f -name "*.js" -print0 | xargs -0 sed -i 's|"/_expo/|"/military/_expo/|g; s|"/assets/|"/military/assets/|g'
+          find dist -type f -name "*.css" -print0 | xargs -0 sed -i 's|url(/|url(/military/|g'
+
       - name: Add SPA fallback for direct page refresh
         run: cp dist/index.html dist/404.html
 

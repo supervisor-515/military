@@ -1,0 +1,3 @@
+# military
+
+Initializing repository copy.

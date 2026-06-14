@@ -1,0 +1,39 @@
+name: Sync from source repository
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace target contents with source repository
+        run: |
+          set -euo pipefail
+          tmpdir="$(mktemp -d)"
+          git clone --depth 1 https://github.com/amelialeecan-art/-.git "$tmpdir/source"
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          rsync -a --delete --exclude='.git' "$tmpdir/source/" ./
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Clone amelialeecan-art/- into military"
+            git push
+          fi

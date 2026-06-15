@@ -51,6 +51,56 @@ jobs:
             sed -i 's|url(/|url(/military/|g' "$file"
           done < <(find dist -type f -name "*.css" -print0)
 
+      - name: Generate PWA icons from source
+        shell: bash
+        run: |
+          set -e
+          SRC=assets/app-icon.png
+          if [ ! -f "$SRC" ]; then
+            echo "::warning::$SRC not found; skipping PWA icon generation"
+            exit 0
+          fi
+          if command -v magick >/dev/null 2>&1; then IM="magick"; else IM="convert"; fi
+          mkdir -p dist/icons
+          "$IM" "$SRC" -resize 192x192 dist/icons/icon-192.png
+          "$IM" "$SRC" -resize 512x512 dist/icons/icon-512.png
+          # 마스커블: 안전 영역(80%) 안에 배치하고 배경색으로 패딩
+          "$IM" "$SRC" -resize 154x154 -background '#0B1014' -gravity center -extent 192x192 dist/icons/icon-192-maskable.png
+          "$IM" "$SRC" -resize 410x410 -background '#0B1014' -gravity center -extent 512x512 dist/icons/icon-512-maskable.png
+          # iOS 홈 화면 아이콘: 투명 배경을 어두운 배경으로 평탄화
+          "$IM" "$SRC" -resize 180x180 -background '#0B1014' -flatten dist/icons/apple-touch-icon.png
+          "$IM" "$SRC" -resize 32x32 dist/favicon.ico
+
+      - name: Inject PWA tags into HTML
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          head = """    <link rel="manifest" href="/military/manifest.json" />
+              <meta name="theme-color" content="#0B1014" />
+              <link rel="icon" href="/military/favicon.ico" />
+              <link rel="apple-touch-icon" href="/military/icons/apple-touch-icon.png" />
+              <meta name="mobile-web-app-capable" content="yes" />
+              <meta name="apple-mobile-web-app-capable" content="yes" />
+              <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+              <meta name="apple-mobile-web-app-title" content="군월급" />
+            """
+          body = """  <script>
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function () {
+                    navigator.serviceWorker.register('/military/sw.js').catch(function () {});
+                  });
+                }
+              </script>
+            """
+          path = "dist/index.html"
+          with open(path, encoding="utf-8") as f:
+              s = f.read()
+          s = s.replace("</head>", head + "</head>", 1)
+          s = s.replace("</body>", body + "</body>", 1)
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(s)
+          PY
+
       - name: Add SPA fallback for direct page refresh
         run: cp dist/index.html dist/404.html
 

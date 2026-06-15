@@ -1,16 +1,18 @@
 # 앱 아이콘
 
-웹앱(PWA) 설치 아이콘은 이 폴더의 `app-icon.png` 한 장에서 생성됩니다.
+- 원본: `assets/app-icon.png` (정사각형, 1024×1024)
+- 배포에 실제로 사용되는 아이콘은 `public/icons/` 에 미리 생성해 커밋되어 있습니다.
+  GitHub Pages 빌드는 `public/` 폴더를 그대로 복사하므로 별도 변환 도구가 필요 없습니다.
 
-- 파일 경로: `assets/app-icon.png`
-- 권장 규격: 정사각형 PNG, **1024×1024**(최소 512×512)
+원본을 바꾼 뒤 아이콘을 다시 만들려면 (sharp 사용):
 
-`main` 브랜치로 푸시되면 GitHub Actions 가 이 원본에서 다음 크기를
-자동으로 만들어 배포합니다.
+```bash
+node scripts/generate-icons.mjs
+```
 
-- `icons/icon-192.png`, `icons/icon-512.png` (홈 화면 아이콘)
-- `icons/icon-192-maskable.png`, `icons/icon-512-maskable.png` (마스커블)
-- `icons/apple-touch-icon.png` (iOS)
-- `favicon.ico`
+생성물:
 
-`app-icon.png` 가 없으면 아이콘 생성 단계는 건너뛰고 배포는 정상 진행됩니다.
+- `public/icons/icon-192.png`, `public/icons/icon-512.png` (홈 화면)
+- `public/icons/icon-192-maskable.png`, `public/icons/icon-512-maskable.png` (마스커블)
+- `public/icons/apple-touch-icon.png` (iOS)
+- `public/favicon-32.png` (파비콘)

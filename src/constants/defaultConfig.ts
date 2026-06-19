@@ -10,7 +10,7 @@ import type {
   SavingsConfig,
   ServiceType,
 } from '../types';
-import { addMonths, toISODate } from '../lib/dateUtils';
+import { dischargeFromEnlist, toISODate } from '../lib/dateUtils';
 
 /** 복무 유형 프리셋 */
 export const SERVICE_TYPES: ServiceType[] = [
@@ -44,7 +44,7 @@ export const DEFAULT_SAVINGS: SavingsConfig = {
     { id: 'kb', name: '국민은행', amount: 200000 },
     { id: 'ibk', name: '기업은행', amount: 200000 },
   ],
-  matchingRate: 0.71,
+  matchingRate: 1.0,
   interestRate: 0.05,
 };
 
@@ -72,7 +72,7 @@ export function createDefaultState(enlistmentDate?: string): AppState {
   return {
     service: {
       enlistmentDate: enlist,
-      dischargeDate: toISODate(addMonths(new Date(enlist), months)),
+      dischargeDate: toISODate(dischargeFromEnlist(new Date(enlist), months)),
       serviceType: 'army',
       monthlyPayDay: 10,
       rankPeriods: { ...DEFAULT_RANK_PERIODS },

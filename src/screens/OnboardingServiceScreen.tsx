@@ -16,7 +16,7 @@ import { H1, Label, Lead } from '../components/SectionTitle';
 import { useApp } from '../state/AppContext';
 import { useAppNavigation } from '../navigation/types';
 import { SERVICE_TYPES } from '../constants/defaultConfig';
-import { addMonths, dDay, formatSpaced, parseISODate, toISODate } from '../lib/dateUtils';
+import { dDay, dischargeFromEnlist, formatSpaced, parseISODate, toISODate } from '../lib/dateUtils';
 import { numFontFamily } from '../theme/typography';
 
 export function OnboardingServiceScreen() {
@@ -35,7 +35,7 @@ export function OnboardingServiceScreen() {
     const enlist = parseISODate(service.enlistmentDate);
     updateService({
       serviceType: key,
-      dischargeDate: toISODate(addMonths(enlist, months)),
+      dischargeDate: toISODate(dischargeFromEnlist(enlist, months)),
     });
   };
 
@@ -44,7 +44,7 @@ export function OnboardingServiceScreen() {
     if (st && st.key !== 'custom') {
       updateService({
         enlistmentDate: iso,
-        dischargeDate: toISODate(addMonths(parseISODate(iso), st.months)),
+        dischargeDate: toISODate(dischargeFromEnlist(parseISODate(iso), st.months)),
       });
     } else {
       updateService({ enlistmentDate: iso });

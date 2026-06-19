@@ -17,7 +17,7 @@ import { InputModal } from '../components/InputModal';
 import { useApp } from '../state/AppContext';
 import { useAppNavigation } from '../navigation/types';
 import { SERVICE_TYPES } from '../constants/defaultConfig';
-import { addMonths, parseISODate, toISODate } from '../lib/dateUtils';
+import { dischargeFromEnlist, parseISODate, toISODate } from '../lib/dateUtils';
 import { formatPercent, formatWon } from '../lib/formatters';
 import { RANK_ORDER } from '../types';
 import type { DecimalPlaces, Rank } from '../types';
@@ -48,7 +48,7 @@ export function SettingsScreen() {
   const onEnlistChange = (iso: string) => {
     const st = SERVICE_TYPES.find((s) => s.key === service.serviceType);
     if (st && st.key !== 'custom') {
-      updateService({ enlistmentDate: iso, dischargeDate: toISODate(addMonths(parseISODate(iso), st.months)) });
+      updateService({ enlistmentDate: iso, dischargeDate: toISODate(dischargeFromEnlist(parseISODate(iso), st.months)) });
     } else {
       updateService({ enlistmentDate: iso });
     }

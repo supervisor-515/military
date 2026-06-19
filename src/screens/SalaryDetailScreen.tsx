@@ -18,7 +18,7 @@ import { Divider } from '../components/SectionTitle';
 import { useApp } from '../state/AppContext';
 import { useNow } from '../hooks/useNow';
 import { useAppNavigation } from '../navigation/types';
-import { computeLiveSalary } from '../lib/salaryCalculator';
+import { computeLiveSalary, getSalaryMatchBonus } from '../lib/salaryCalculator';
 import { formatMonthDay } from '../lib/dateUtils';
 import { formatInt, formatRate, formatWon } from '../lib/formatters';
 
@@ -26,8 +26,9 @@ export function SalaryDetailScreen() {
   const { state, colors: c } = useApp();
   const nav = useAppNavigation();
   const now = useNow(1000);
-  const { service, settings } = state;
-  const live = computeLiveSalary(service, now);
+  const { service, savings, settings } = state;
+  const matchBonus = getSalaryMatchBonus(savings, settings);
+  const live = computeLiveSalary(service, now, matchBonus);
 
   return (
     <Screen>
@@ -36,7 +37,7 @@ export function SalaryDetailScreen() {
       <Hero>
         <LiveDot label="현재 월급 구간 · 실시간 적립" />
         <MoneyCounter
-          getValue={() => computeLiveSalary(service, new Date()).accrued}
+          getValue={() => computeLiveSalary(service, new Date(), matchBonus).accrued}
           decimals={settings.decimalPlaces}
           intSize={40}
         />

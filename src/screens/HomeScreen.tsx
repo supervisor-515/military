@@ -23,6 +23,7 @@ import {
   computeLiveSalary,
   getNextPromotion,
   getRankAtDate,
+  getSalaryMatchBonus,
   getTotalReceived,
   getFutureSalary,
 } from '../lib/salaryCalculator';
@@ -51,10 +52,11 @@ export function HomeScreen() {
   const enlist = parseISODate(service.enlistmentDate);
   const discharge = parseISODate(service.dischargeDate);
 
-  const live = computeLiveSalary(service, now);
+  const matchBonus = getSalaryMatchBonus(savings, settings);
+  const live = computeLiveSalary(service, now, matchBonus);
   const promo = getNextPromotion(service, now);
-  const received = getTotalReceived(service, now);
-  const future = getFutureSalary(service, now);
+  const received = getTotalReceived(service, now, matchBonus);
+  const future = getFutureSalary(service, now, matchBonus);
   const assets = computeAssets(service, savings, now);
   const sav = computeSavings(service, savings, now);
 
@@ -64,7 +66,7 @@ export function HomeScreen() {
   const cd = countdownTo(live.period.end, now);
 
   const nextPayRank = getRankAtDate(service, live.period.end);
-  const nextPaySalary = service.rankSalaryTable[nextPayRank];
+  const nextPaySalary = service.rankSalaryTable[nextPayRank] + matchBonus;
 
   // 오늘이 월급날인지
   const todaysPayday = payDayOfMonth(now.getFullYear(), now.getMonth(), service.monthlyPayDay);
@@ -143,7 +145,7 @@ export function HomeScreen() {
           <Badge label="LIVE" tone="live" />
         </RowBetween>
         <MoneyCounter
-          getValue={() => computeLiveSalary(service, new Date()).accrued}
+          getValue={() => computeLiveSalary(service, new Date(), matchBonus).accrued}
           decimals={settings.decimalPlaces}
           intSize={42}
         />

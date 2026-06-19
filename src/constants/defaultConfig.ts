@@ -83,6 +83,7 @@ export function createDefaultState(enlistmentDate?: string): AppState {
       decimalPlaces: 10,
       theme: 'dark',
       onboardingCompleted: false,
+      includeSavingsMatch: false,
     },
     notifications: { ...DEFAULT_NOTIFICATIONS },
     goals: DEFAULT_GOALS.map((g, i) => ({

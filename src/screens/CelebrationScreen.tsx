@@ -17,6 +17,7 @@ import { Icon } from '../components/Icon';
 import { useApp } from '../state/AppContext';
 import { useAppNavigation } from '../navigation/types';
 import {
+  getSalaryMatchBonus,
   getTotalReceived,
   getTotalServiceSalary,
 } from '../lib/salaryCalculator';
@@ -29,15 +30,16 @@ export function CelebrationScreen() {
   const { state, colors: c } = useApp();
   const nav = useAppNavigation();
   const route = useRoute();
-  const { service, savings } = state;
+  const { service, savings, settings } = state;
   const [runKey, setRunKey] = useState(0);
 
   const now = new Date();
   const discharge = parseISODate(service.dischargeDate);
   const isPreview = (route.params as { preview?: boolean } | undefined)?.preview;
 
-  const serviceSalary = getTotalServiceSalary(service);
-  const received = getTotalReceived(service, now);
+  const matchBonus = getSalaryMatchBonus(savings, settings);
+  const serviceSalary = getTotalServiceSalary(service, matchBonus);
+  const received = getTotalReceived(service, now, matchBonus);
   const sav = computeSavings(service, savings, now);
   const assets = computeAssets(service, savings, now);
   const savingsTotal = sav.principalTotal + sav.matchingTotal;

@@ -172,6 +172,19 @@ export function SettingsScreen() {
         <ListRow label="매칭지원금 비율" value={formatPercent(savings.matchingRate)} numericValue chevron onPress={() => setEdit({ kind: 'matching' })} />
         <Divider />
         <ListRow label="예상 금리" value={formatPercent(savings.interestRate, 1)} numericValue chevron onPress={() => setEdit({ kind: 'interest' })} />
+        <Divider />
+        <RowBetween>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={[styles.k, { color: c.tx2 }]}>월급에 매칭지원금 포함</Text>
+            <Text style={[styles.hint, { color: c.tx3 }]}>
+              매칭지원금(납입액 × 매칭비율)을 월급에 더해 표시해요.
+            </Text>
+          </View>
+          <ToggleSwitch
+            value={settings.includeSavingsMatch}
+            onChange={(v) => updateSettings({ includeSavingsMatch: v })}
+          />
+        </RowBetween>
       </Card>
 
       <SectionTitle>표시</SectionTitle>
@@ -211,5 +224,6 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   stack: { gap: 8 },
   k: { fontSize: 14, fontWeight: '500' },
+  hint: { fontSize: 12, marginTop: 3, lineHeight: 16 },
   buttons: { gap: 10, marginTop: 4 },
 });

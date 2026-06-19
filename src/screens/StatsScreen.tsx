@@ -21,6 +21,7 @@ import {
   getDailyAverage,
   getFutureSalary,
   getSalaryByRank,
+  getSalaryMatchBonus,
   getTotalReceived,
 } from '../lib/salaryCalculator';
 import { computeSavings } from '../lib/savingsCalculator';
@@ -34,14 +35,15 @@ export function StatsScreen() {
   const { state, colors: c } = useApp();
   const nav = useAppNavigation();
   const now = useNow(60000);
-  const { service, savings } = state;
+  const { service, savings, settings } = state;
+  const matchBonus = getSalaryMatchBonus(savings, settings);
 
-  const received = getTotalReceived(service, now);
-  const future = getFutureSalary(service, now);
+  const received = getTotalReceived(service, now, matchBonus);
+  const future = getFutureSalary(service, now, matchBonus);
   const sav = computeSavings(service, savings, now);
   const assets = computeAssets(service, savings, now);
-  const byRank = getSalaryByRank(service);
-  const daily = getDailyAverage(service);
+  const byRank = getSalaryByRank(service, matchBonus);
+  const daily = getDailyAverage(service, matchBonus);
 
   const timeline = useMemo(() => buildTimeline(service, savings, now), [service, savings, now]);
   const nowIndex = timeline.findIndex((e) => e.status === 'now');
@@ -52,7 +54,7 @@ export function StatsScreen() {
     const start = Math.max(0, Math.min(arr.length - 12, (nowIndex < 0 ? arr.length : nowIndex) - 6));
     return { values: arr.slice(start, start + 12), offset: start };
   };
-  const salarySample = sample(timeline.map((e) => e.salary));
+  const salarySample = sample(timeline.map((e) => e.salary + matchBonus));
   const savingsSample = sample(timeline.map((e) => e.cumulativeSavings));
 
   return (

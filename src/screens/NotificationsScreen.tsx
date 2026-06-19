@@ -20,6 +20,7 @@ import {
   computeLiveSalary,
   getNextPromotion,
   getRankAtDate,
+  getSalaryMatchBonus,
 } from '../lib/salaryCalculator';
 import { dDay, formatDot, parseISODate } from '../lib/dateUtils';
 import { formatWon } from '../lib/formatters';
@@ -37,14 +38,15 @@ export function NotificationsScreen() {
   const { state, colors: c, updateNotifications } = useApp();
   const nav = useAppNavigation();
   const now = useNow(60000);
-  const { service, savings, notifications } = state;
+  const { service, savings, settings, notifications } = state;
+  const matchBonus = getSalaryMatchBonus(savings, settings);
 
-  const live = computeLiveSalary(service, now);
+  const live = computeLiveSalary(service, now, matchBonus);
   const promo = getNextPromotion(service, now);
   const discharge = parseISODate(service.dischargeDate);
   const nextPay = live.period.end;
   const nextPayRank = getRankAtDate(service, nextPay);
-  const nextPaySalary = service.rankSalaryTable[nextPayRank];
+  const nextPaySalary = service.rankSalaryTable[nextPayRank] + matchBonus;
 
   const items: NotiItem[] = [];
   if (notifications.payday) {
@@ -70,7 +72,7 @@ export function NotificationsScreen() {
       icon: 'medal',
       tone: c.gold,
       title: `${promo.nextRank} 진급 예정 🎖️`,
-      desc: `진급하면 월급이 ${formatWon(service.rankSalaryTable[promo.nextRank])}으로 올라요.`,
+      desc: `진급하면 월급이 ${formatWon(service.rankSalaryTable[promo.nextRank] + matchBonus)}으로 올라요.`,
       when: `${formatDot(promo.date)} · D-${promo.daysLeft}`,
     });
   }

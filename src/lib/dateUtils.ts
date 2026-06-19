@@ -43,6 +43,15 @@ export function addDays(d: Date, days: number): Date {
   return new Date(d.getTime() + days * MS_PER_DAY);
 }
 
+/**
+ * 입대일과 복무 개월수로 전역일 계산.
+ * 입대일이 복무 1일차이므로 만기(입대 + N개월)의 하루 전날이 전역일이다.
+ * 예) 1월 5일 입대 + 18개월 → 다음 해 7월 4일 전역.
+ */
+export function dischargeFromEnlist(enlist: Date, months: number): Date {
+  return addDays(addMonths(enlist, months), -1);
+}
+
 /** 두 날짜(자정 기준) 사이 일수 차 (b - a) */
 export function daysBetween(a: Date, b: Date): number {
   return Math.round((startOfDay(b).getTime() - startOfDay(a).getTime()) / MS_PER_DAY);

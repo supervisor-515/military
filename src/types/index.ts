@@ -77,6 +77,8 @@ export interface AppSettings {
   theme: ThemeMode;
   /** 온보딩 완료 여부 */
   onboardingCompleted: boolean;
+  /** 월급 표시에 적금 매칭지원금을 포함할지 여부 */
+  includeSavingsMatch: boolean;
 }
 
 /** 알림 설정 종류 */

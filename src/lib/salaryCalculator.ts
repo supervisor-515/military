@@ -2,7 +2,7 @@
  * 월급 / 계급 / 실시간 적립 계산 로직
  * UI 와 완전히 분리된 순수 함수. 모든 계산의 단일 출처.
  */
-import type { Rank, RankPeriods, UserServiceInfo } from '../types';
+import type { AppSettings, Rank, RankPeriods, SavingsConfig, UserServiceInfo } from '../types';
 import { RANK_ORDER } from '../types';
 import {
   addMonths,
@@ -12,6 +12,16 @@ import {
 } from './dateUtils';
 
 const MS_PER_SEC = 1000;
+
+/**
+ * 월급에 더해질 적금 매칭지원금(월 단위).
+ * 설정 토글이 켜져 있고 군적금에 가입한 경우에만 월 납입액 × 매칭비율을 반환한다.
+ * 토글이 꺼져 있거나 미가입이면 0 (= 기존 동작).
+ */
+export function getSalaryMatchBonus(savings: SavingsConfig, settings: AppSettings): number {
+  if (!settings.includeSavingsMatch || !savings.enabled) return 0;
+  return Math.round(savings.monthlyDeposit * savings.matchingRate);
+}
 
 /** 계급 구간 (입대일 기준 누적) */
 export interface RankBoundary {
@@ -140,9 +150,10 @@ export interface LiveSalary {
 export function computeLiveSalary(
   service: UserServiceInfo,
   now: Date = new Date(),
+  monthlyBonus = 0,
 ): LiveSalary {
   const rank = getCurrentRank(service, now);
-  const salary = service.rankSalaryTable[rank];
+  const salary = service.rankSalaryTable[rank] + monthlyBonus;
   const period = getCurrentPayPeriod(service, now);
   const totalSeconds = (period.end.getTime() - period.start.getTime()) / MS_PER_SEC;
   const elapsedSeconds = Math.max(
@@ -195,44 +206,55 @@ export function listPaydays(service: UserServiceInfo): Date[] {
   return paydays;
 }
 
-/** 지금까지 받은 총 월급 (지난 월급일 누적) */
-export function getTotalReceived(service: UserServiceInfo, now: Date = new Date()): number {
+/** 지금까지 받은 총 월급 (지난 월급일 누적). monthlyBonus 는 매월 더해질 매칭지원금. */
+export function getTotalReceived(
+  service: UserServiceInfo,
+  now: Date = new Date(),
+  monthlyBonus = 0,
+): number {
   return listPaydays(service)
     .filter((pd) => pd.getTime() <= now.getTime())
-    .reduce((sum, pd) => sum + service.rankSalaryTable[getRankAtDate(service, pd)], 0);
+    .reduce((sum, pd) => sum + service.rankSalaryTable[getRankAtDate(service, pd)] + monthlyBonus, 0);
 }
 
-/** 전역까지 앞으로 받을 월급 (미래 월급일 누적) */
-export function getFutureSalary(service: UserServiceInfo, now: Date = new Date()): number {
+/** 전역까지 앞으로 받을 월급 (미래 월급일 누적). */
+export function getFutureSalary(
+  service: UserServiceInfo,
+  now: Date = new Date(),
+  monthlyBonus = 0,
+): number {
   return listPaydays(service)
     .filter((pd) => pd.getTime() > now.getTime())
-    .reduce((sum, pd) => sum + service.rankSalaryTable[getRankAtDate(service, pd)], 0);
+    .reduce((sum, pd) => sum + service.rankSalaryTable[getRankAtDate(service, pd)] + monthlyBonus, 0);
 }
 
-/** 복무 전체 예상 월급 (모든 월급일 합) */
-export function getTotalServiceSalary(service: UserServiceInfo): number {
+/** 복무 전체 예상 월급 (모든 월급일 합). */
+export function getTotalServiceSalary(service: UserServiceInfo, monthlyBonus = 0): number {
   return listPaydays(service).reduce(
-    (sum, pd) => sum + service.rankSalaryTable[getRankAtDate(service, pd)],
+    (sum, pd) => sum + service.rankSalaryTable[getRankAtDate(service, pd)] + monthlyBonus,
     0,
   );
 }
 
-/** 계급별 월급 합계 (통계용) */
-export function getSalaryByRank(service: UserServiceInfo): Record<Rank, number> {
+/** 계급별 월급 합계 (통계용). */
+export function getSalaryByRank(
+  service: UserServiceInfo,
+  monthlyBonus = 0,
+): Record<Rank, number> {
   const result: Record<Rank, number> = { 이병: 0, 일병: 0, 상병: 0, 병장: 0 };
   for (const pd of listPaydays(service)) {
     const rank = getRankAtDate(service, pd);
-    result[rank] += service.rankSalaryTable[rank];
+    result[rank] += service.rankSalaryTable[rank] + monthlyBonus;
   }
   return result;
 }
 
-/** 복무 전체 기준 하루 평균 월급 가치 */
-export function getDailyAverage(service: UserServiceInfo): number {
+/** 복무 전체 기준 하루 평균 월급 가치. */
+export function getDailyAverage(service: UserServiceInfo, monthlyBonus = 0): number {
   const enlist = parseISODate(service.enlistmentDate);
   const discharge = parseISODate(service.dischargeDate);
   const totalDays = Math.max(1, daysBetween(enlist, discharge));
-  return getTotalServiceSalary(service) / totalDays;
+  return getTotalServiceSalary(service, monthlyBonus) / totalDays;
 }
 
 /** 계급 단계 인덱스 (점 개수 표시용, 1~4) */
